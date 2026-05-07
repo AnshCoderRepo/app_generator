@@ -70,6 +70,13 @@ export async function getColleges() {
   }
 }
 
+export async function getFilterOptions() {
+  const colleges = await getColleges();
+  const states = Array.from(new Set(colleges.map(c => c.state).filter(Boolean))).sort();
+  const categories = Array.from(new Set(colleges.map(c => c.type).filter(Boolean))).sort();
+  return { states, categories };
+}
+
 export async function getCollegeById(id: string) {
   const colleges = await getColleges();
   return colleges.find(c => c.id === id) || null;
