@@ -1,13 +1,17 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { PlusCircle, XCircle, CheckCircle, GraduationCap, MapPin, Award, TrendingUp, Search } from 'lucide-react';
+import { PlusCircle, XCircle, CheckCircle, GraduationCap, MapPin, Award, TrendingUp, Search, Save, Loader2, Sparkles } from 'lucide-react';
 import { useShortlist } from '@/components/ShortlistContext';
 import CollegeImage from './CollegeImage';
+import { useSession } from 'next-auth/react';
 
 export default function CompareTable({ allColleges, initialColleges }: { allColleges: any[], initialColleges: any[] }) {
   const { shortlist, addToShortlist, removeFromShortlist } = useShortlist();
+  const { data: session } = useSession();
+  const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   
   useEffect(() => {
     initialColleges.forEach(college => {
@@ -32,6 +36,31 @@ export default function CompareTable({ allColleges, initialColleges }: { allColl
     removeFromShortlist(id);
   };
 
+  const handleSaveComparison = async () => {
+    if (!session) return;
+    if (collegesToCompare.length < 2) return;
+    
+    setSaving(true);
+    try {
+      const res = await fetch('/api/saved/comparisons', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: `Comparison of ${collegesToCompare.length} Colleges`,
+          collegeIds: collegesToCompare.map(c => c.id),
+        }),
+      });
+      if (res.ok) {
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 3000);
+      }
+    } catch (err) {
+      console.error('Save failed', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
       <div className="overflow-x-auto">
@@ -44,7 +73,36 @@ export default function CompareTable({ allColleges, initialColleges }: { allColl
                       <TrendingUp size={20} className="text-white" />
                    </div>
                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-[0.2em]">Comparison Matrix</h3>
-                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cross-Platform Analysis</p>
+                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Cross-Platform Analysis</p>
+                   
+                   {session ? (
+                     <button 
+                       onClick={handleSaveComparison}
+                       disabled={saving || collegesToCompare.length < 2}
+                       className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                         saveSuccess 
+                         ? 'bg-green-500 text-white' 
+                         : 'bg-sky-600 text-white hover:bg-sky-500 shadow-lg shadow-sky-600/20 active:scale-95 disabled:opacity-50'
+                       }`}
+                     >
+                       {saving ? (
+                         <Loader2 size={14} className="animate-spin" />
+                       ) : saveSuccess ? (
+                         <CheckCircle size={14} />
+                       ) : (
+                         <Save size={14} />
+                       )}
+                       {saveSuccess ? 'Saved!' : 'Save Comparison'}
+                     </button>
+                   ) : (
+                     <Link 
+                       href="/login"
+                       className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all border border-slate-200"
+                     >
+                       <Save size={14} />
+                       Login to Save
+                     </Link>
+                   )}
                 </div>
               </th>
               {slots.map((college, i) => (
@@ -138,3 +196,4 @@ export default function CompareTable({ allColleges, initialColleges }: { allColl
     </div>
   );
 }
+

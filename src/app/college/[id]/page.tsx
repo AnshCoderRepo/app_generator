@@ -192,6 +192,37 @@ export default async function CollegePage({ params }: { params: Promise<{ id: st
                </div>
             </section>
 
+            {/* Student Reviews */}
+            <section className="bg-white p-10 md:p-12 rounded-[3rem] shadow-sm border border-slate-200">
+              <div className="flex items-center gap-4 mb-10">
+                <div className="bg-amber-50 p-3 rounded-2xl">
+                  <Star className="text-amber-500" size={28} />
+                </div>
+                <h2 className="text-3xl font-black text-slate-900 tracking-tight">Student Perspectives</h2>
+              </div>
+              
+              <div className="space-y-8">
+                {[
+                  { name: "Arjun Mehta", year: "Final Year B.Tech", text: "The campus culture is vibrant and the industry connections here are unparalleled. Highly recommend the CSE program.", rating: 5 },
+                  { name: "Priya Sharma", year: "Alumni 2024", text: "Infrastructure is top-notch, especially the new research wing. Faculty is supportive of startups.", rating: 4.5 }
+                ].map((review, i) => (
+                  <div key={i} className="bg-slate-50 p-8 rounded-3xl border border-slate-100">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h4 className="font-black text-slate-900">{review.name}</h4>
+                        <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest">{review.year}</p>
+                      </div>
+                      <div className="flex items-center gap-1 bg-white px-3 py-1 rounded-full shadow-sm">
+                        <Star size={12} className="fill-amber-400 text-amber-400" />
+                        <span className="text-xs font-black text-slate-900">{review.rating}</span>
+                      </div>
+                    </div>
+                    <p className="text-slate-600 font-medium leading-relaxed italic">"{review.text}"</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
           </div>
 
           {/* Sidebar */}
