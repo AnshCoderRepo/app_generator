@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 
 type ShortlistContextType = {
   shortlist: string[];
@@ -15,6 +16,7 @@ const ShortlistContext = createContext<ShortlistContextType | undefined>(undefin
 export function ShortlistProvider({ children }: { children: React.ReactNode }) {
   const [shortlist, setShortlist] = useState<string[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
+  const { data: session } = useSession();
 
   useEffect(() => {
     const saved = localStorage.getItem('college_shortlist');
@@ -29,22 +31,62 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    if (session?.user) {
+      fetch('/api/saved/colleges')
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            const dbIds = data.map((item: any) => item.collegeId);
+            setShortlist(prev => {
+              const merged = Array.from(new Set([...prev, ...dbIds]));
+              return merged;
+            });
+          }
+        })
+        .catch(err => console.error('Error fetching saved colleges', err));
+    }
+  }, [session]);
+
+  useEffect(() => {
     if (isInitialized) {
       localStorage.setItem('college_shortlist', JSON.stringify(shortlist));
     }
   }, [shortlist, isInitialized]);
 
-  const addToShortlist = (id: string) => {
+  const addToShortlist = async (id: string) => {
+    if (session?.user) {
+      try {
+        await fetch('/api/saved/colleges', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ collegeId: id }),
+        });
+      } catch (err) {
+        console.error('Error saving college to DB', err);
+      }
+    }
+
     setShortlist(prev => {
       if (prev.includes(id)) return prev;
-      if (prev.length >= 3) {
+      if (prev.length >= 6) { // Increased limit slightly for better UX
         return [...prev.slice(1), id];
       }
       return [...prev, id];
     });
   };
 
-  const removeFromShortlist = (id: string) => {
+  const removeFromShortlist = async (id: string) => {
+    if (session?.user) {
+      try {
+        await fetch('/api/saved/colleges', {
+          method: 'POST', // The endpoint toggles
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ collegeId: id }),
+        });
+      } catch (err) {
+        console.error('Error removing college from DB', err);
+      }
+    }
     setShortlist(prev => prev.filter(item => item !== id));
   };
 
@@ -58,6 +100,7 @@ export function ShortlistProvider({ children }: { children: React.ReactNode }) {
     </ShortlistContext.Provider>
   );
 }
+
 
 export function useShortlist() {
   const context = useContext(ShortlistContext);

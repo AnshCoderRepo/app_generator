@@ -9,7 +9,7 @@ import SortSelect from '@/components/SortSelect';
 
 export const revalidate = 0;
 
-export default async function Home({ searchParams }: { searchParams: Promise<{ q?: string, page?: string, location?: string, maxFee?: string, category?: string, sort?: string }> }) {
+export default async function Home({ searchParams }: { searchParams: Promise<{ q?: string, page?: string, location?: string, maxFee?: string, category?: string, sort?: string, course?: string }> }) {
   const params = await searchParams;
   const q = params.q?.toLowerCase() || '';
   const page = parseInt(params.page || '1', 10);
@@ -17,6 +17,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ q
   const categoryFilter = params.category || '';
   const maxFee = parseInt(params.maxFee || '10000000', 10);
   const sortBy = params.sort || 'rating';
+  const courseQuery = params.course?.toLowerCase() || '';
   
   const allColleges = await getColleges();
   const { states, categories } = await getFilterOptions();
@@ -27,7 +28,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ q
     const matchLocation = !locationFilter || c.state === locationFilter || c.city === locationFilter;
     const matchCategory = !categoryFilter || c.type === categoryFilter;
     const matchFee = c.tuition <= maxFee;
-    return matchSearch && matchLocation && matchCategory && matchFee;
+    const matchCourse = !courseQuery || c.courses.some((course: any) => course.title.toLowerCase().includes(courseQuery));
+    return matchSearch && matchLocation && matchCategory && matchFee && matchCourse;
   });
 
   // Apply Sorting
@@ -46,32 +48,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ q
   return (
     <div className="min-h-screen bg-[#f8fafc]">
       {/* Navbar */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            <Link href="/" className="flex items-center gap-3 group">
-              <div className="bg-sky-600 p-2 rounded-xl group-hover:rotate-12 transition-transform shadow-lg shadow-sky-600/20">
-                <GraduationCap className="h-6 w-6 text-white" />
-              </div>
-              <span className="font-black text-2xl text-slate-900 tracking-tighter uppercase">College<span className="text-sky-600">Finder</span></span>
-            </Link>
-            
-            <div className="hidden lg:flex items-center gap-10">
-              <nav className="flex items-center gap-8">
-                <Link href="/" className="text-sm font-bold text-sky-600 border-b-2 border-sky-600 pb-1">Browse Colleges</Link>
-                <Link href="/compare" className="text-sm font-bold text-slate-500 hover:text-sky-600 transition-colors">Comparison Tool</Link>
-                <Link href="/predictor" className="text-sm font-bold text-slate-500 hover:text-sky-600 transition-colors">Admission Predictor</Link>
-                <Link href="/qa" className="text-sm font-bold text-slate-500 hover:text-sky-600 transition-colors">Community Q&A</Link>
-              </nav>
-              <div className="h-6 w-[1px] bg-slate-200"></div>
-              <div className="flex items-center gap-5">
-                <CartNavbarItem />
-                <Link href="/login" className="bg-slate-900 text-white px-6 py-2.5 rounded-full text-sm font-bold hover:bg-slate-800 transition-all shadow-md active:scale-95">Log In</Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+
 
       {/* Hero Search */}
       <section className="relative bg-slate-900 py-20 px-4 overflow-hidden">
@@ -185,6 +162,21 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ q
                     <option value="250000">Under ₹2,50,000</option>
                     <option value="500000">Under ₹5,00,000</option>
                   </select>
+                </div>
+
+                {/* Course Filter */}
+                <div>
+                  <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Specific Course</h3>
+                  <div className="relative">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input 
+                      type="text" 
+                      name="course" 
+                      defaultValue={params.course}
+                      placeholder="e.g. B.Tech, MBA" 
+                      className="w-full pl-9 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-sky-500 transition-colors"
+                    />
+                  </div>
                 </div>
 
                 <button type="submit" className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-sky-600 transition-all shadow-xl hover:shadow-sky-600/20 active:scale-95">
