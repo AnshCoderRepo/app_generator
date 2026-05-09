@@ -59,7 +59,7 @@ export default async function DashboardPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {savedColleges.map(({ college }) => (
+                {savedColleges.map(({ college }: { college: any }) => (
                   <div key={college.id} className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm hover:shadow-xl transition-all group overflow-hidden relative">
                     <div className="flex gap-6 relative z-10">
                       <div className="w-24 h-24 rounded-2xl overflow-hidden shrink-0 border border-slate-100 shadow-inner">
@@ -103,7 +103,7 @@ export default async function DashboardPage() {
                 </div>
               ) : (
                 <div className="divide-y divide-slate-100">
-                  {savedComparisons.map((comp) => (
+                  {savedComparisons.map((comp: any) => (
                     <div key={comp.id} className="p-6 hover:bg-slate-50 transition-colors group">
                       <div className="flex justify-between items-start mb-2">
                         <h3 className="font-black text-slate-900 leading-tight group-hover:text-sky-600 transition-colors">{comp.name}</h3>
